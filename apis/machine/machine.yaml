@@ -20,5 +20,221 @@ paths:
           content:
             application/json:
               schema:
-                type: string
-                example: TODO
+                type: array
+                items:
+                  $ref: "#/components/schemas/Ingredient"
+              example:
+                [
+                  {
+                    "id": "b1",
+                    "name": "Turbo-Charged Whole Wheat Bun",
+                    "qty": 8,
+                    "cost": 4.45,
+                    "type": "bread",
+                  },
+                  {
+                    "id": "b2",
+                    "name": "Deluxe Softee White Bun",
+                    "qty": 3,
+                    "cost": 3.45,
+                    "type": "bread",
+                  },
+                  {
+                    "id": "m1",
+                    "name": "Fenway Frank",
+                    "qty": 0,
+                    "cost": 4,
+                    "type": "meat",
+                  },
+                  {
+                    "id": "m2",
+                    "name": "Hebrew National Hot Dog",
+                    "qty": 30,
+                    "cost": 0.75,
+                    "type": "meat",
+                  },
+                  {
+                    "id": "a1",
+                    "name": "Ketchup",
+                    "qty": 10,
+                    "cost": 0.02,
+                    "type": "addon",
+                  },
+                  {
+                    "id": "a2",
+                    "name": "Mustard",
+                    "qty": 10,
+                    "cost": 0.04,
+                    "type": "addon",
+                  },
+                  {
+                    "id": "a3",
+                    "name": "My Little Pony Plate",
+                    "qty": 2,
+                    "cost": 0.35,
+                    "type": "addon",
+                  },
+                ]
+  /inventory/{id}:
+    get:
+      tags:
+        - Inventory
+      summary: Get information about a specific ingredient
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: id of the ingredient to get inventory information about
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ingredient"
+        "404":
+          description: |
+            Not Found
+
+            Happens when the id is invalid
+  /cook:
+    post:
+      tags:
+        - Preperation
+      summary: Cook a hotdog
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HotDog"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HotDog'
+        "422":
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/HotDogError'
+  /cook/{id}:
+    get:
+      tags:
+        - Preperation
+      summary: Get the status of a cook
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HotDog'
+        "404":
+          description: |
+            Not Found
+
+            Happens when the id is invalid
+
+
+
+components:
+  schemas:
+    Ingredient:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "b1"
+        name:
+          type: string
+          example: "Turbo-Charged Whole Wheat Bun"
+        qty:
+          type: integer
+          example: 8
+        cost:
+          type: number
+          example: 4.45
+        type:
+          type: string
+          enum: [meat, bread, addon]
+          example: "bread"
+      required:
+        - id
+        - name
+        - qty
+        - cost
+        - type
+    HotDog:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "0001"
+        bread:
+          type: string
+          description: |
+            the id of the bread to use for this hotdog
+
+            must be the id of an ingredient of type bread
+          example: b1
+        meat:
+          type: string
+          description: |
+            the id of the meat to use for this hotdog
+
+            must be the id of an ingredient of type meat
+          example: m1
+        addons:
+          type: array
+          items:
+            type: string
+            description: |
+              the id of an addon to use for this hotdog
+
+              must be the id of an ingredient of type addon
+            example: a1
+        status:
+          type: string
+          enum: [pending, cooking, ready, dispensed, failed]
+      required:
+        - bread
+        - meat
+    IngredientTypeError:
+      type: object
+      properties:
+        required:
+          type: string
+          enum: [meat, bread, addon]
+          example: meat
+        provided:
+          type: string
+          enum: [meat, bread, addon]
+          example: bread
+    MissingRequiredIngredientError:
+      type: object
+      properties:
+        missing:
+          type: string
+          enum: [meat]
+          example: meat
+    HotDogError:
+      oneOf:
+        - $ref: "#/components/schemas/IngredientTypeError"
+        - $ref: "#/components/schemas/MissingRequiredIngredientError"
