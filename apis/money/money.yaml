@@ -1,0 +1,91 @@
+openapi: 3.0.0
+info:
+  title: Internal Money API
+  description: Works with both our credit card vendor and our card reader
+  version: 0.1.0
+
+servers:
+  - url: http://localhost:3005
+    description: local development server
+
+paths:
+  /payment:
+    post:
+      tags:
+        - Payments
+      summary: Creates a payment
+      requestBody:
+        description: the payment to make
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Payment'
+            example: {
+              amount: "30.85"
+            }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        "422":
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /payment/{id}:
+    get:
+      tags:
+        - Payments
+      summary: Find out information about a payment
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: id of the payment to retrieve
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        "404":
+            description: |
+             Not Found
+
+             Returned when the given id isn't valid
+          
+
+components:
+  schemas:
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "12345"
+        amount:
+          type: number
+          example: "30.85"
+        status:
+          type: string
+          enum: [pending, complete, cancelled]
+          example: pending
+      required:
+        - amount
+    Error:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            type: string
+          example: ["No hot dog costs THAT much money."]
